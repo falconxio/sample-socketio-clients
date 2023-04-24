@@ -1,16 +1,6 @@
-## Node js sample client
-node version > v16.19.1
+## Falconx Socketio clients
+Sample clients for to connect to falconx price stream over socketio 
 
-## run steps 
-
-npm i socket.io-client@2.5.0 
-npm i crypto-js@4.1.1 
-
-Edit API keys and host as desired in main.js
-
-run node main.js
-
-
+Please go through specific README of each programming language.
 ## contributions
 Please reach out to maintainers privately
-
