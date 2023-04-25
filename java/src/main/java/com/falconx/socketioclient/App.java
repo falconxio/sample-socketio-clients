@@ -8,7 +8,7 @@ import java.util.Date;
 import javax.crypto.Mac;
 
 /**
- * Hello world!
+ * Main App
  */
 public final class App {
     private App() {
@@ -22,7 +22,6 @@ public final class App {
     public static void main(String[] args) throws Exception {
         Map<String, String> headers = getKeys("SECRET",
                 "API_KEY", "PASSPHRASE");
-        // Map<String, String> headers =        System.out.println("starting");
 
         SocketIOClient client = new SocketIOClient("https://ws-stream.falconx.io", headers);
         client.connect();
