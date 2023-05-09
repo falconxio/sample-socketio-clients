@@ -13,10 +13,10 @@ logger = logzero.logger
 ctx = ssl.create_default_context()
 ctx.set_ciphers('DEFAULT')
 
-URL = 'http://localhost:8080'
+URL = 'https://stream.falconx.io'
 API_KEY = '<Your API_KEY>'
 PASSPHRASE = '<Your PASSPHRASE>'
-SECRET_KEY = '<Your PASSPHRASE>'
+SECRET_KEY = '<Your SECRET_KEY>'
 
 def create_header(api_key, secret_key, passphrase):
     timestamp = str(time.time())
