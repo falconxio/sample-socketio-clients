@@ -34,11 +34,10 @@ def create_header(api_key, secret_key, passphrase):
 
 
 class FastRFSClient(socketio.ClientNamespace):
-    def __init__(self, namespace, print_every_n_response):
+    def __init__(self, namespace):
         self.subscription_requests = []
         self.previous_response_times = {}
         self.running_avg_times = {}
-        self.print_every_n_response = print_every_n_response
         super().__init__(namespace)
 
     def populate_subscription_requests(self, token_pairs: list, levels: list):
@@ -63,18 +62,6 @@ class FastRFSClient(socketio.ClientNamespace):
             self.previous_response_times[client_request_id] = time.time()
         logger.info('Finished subscribing.')
 
-    # def on_connect(self):
-    #     logger.info('Server connected.')
-    #     config_request = {
-    #         'message_type': "GET_ALLOWED_MARKETS",
-    #         'client_request_id': "5c5325e3-ee42-76fa-932c-64dce446d8be"
-    #     }
-    #     logger.info("Client sent request: " + str(config_request))
-    #     self.emit('request', config_request, namespace='/streaming')
-    #     client_request_id = config_request['client_request_id']
-    #     self.previous_response_times[client_request_id] = time.time()        
-    #     logger.info('Finished call.')
-
     def on_disconnect(self, *args):
         logger.info('Server disconnected.' + str(args))
 
@@ -92,15 +79,7 @@ class FastRFSClient(socketio.ClientNamespace):
     def on_stream(self, *args):
         response_time = time.time()
         client_request_id = args[0][0]['client_request_id']
-        previous_response_time = self.previous_response_times[client_request_id]
-        streaming_response_time = response_time - previous_response_time
-        running_avg, num_of_responses = self.running_avg_times.get(client_request_id, (0, 0))
-        running_avg = (running_avg * num_of_responses + streaming_response_time) / (num_of_responses + 1)
         logger.info("printing arguments ", *args)
-        if num_of_responses % self.print_every_n_response == 0:
-            logger.info(f'client_request_id: {client_request_id}, streaming heart beat: {streaming_response_time}, running average: {running_avg}')
-
-        self.running_avg_times[client_request_id] = (running_avg, num_of_responses + 1)
         self.previous_response_times[client_request_id] = response_time
 
     def on_error(self, *args):
@@ -108,7 +87,7 @@ class FastRFSClient(socketio.ClientNamespace):
 
 
 def main(args):
-    client = FastRFSClient(namespace='/streaming', print_every_n_response=args.print_every_n_response)
+    client = FastRFSClient(namespace='/streaming')
     client.populate_subscription_requests(args.token_pairs, args.levels)
     headers = create_header(API_KEY, SECRET_KEY, PASSPHRASE)
     socketio_client = socketio.Client(logger=False, engineio_logger=False, ssl_verify=False)
@@ -131,12 +110,6 @@ if __name__ == '__main__':
                         required=False,
                         default="1,2",
                         help="Comma separated levels eg. 190,200,400")
-
-    parser.add_argument('--print_every_n_response',
-                        type=int,
-                        required=False,
-                        default=1,
-                        help="Print every nth response")
 
     args = parser.parse_args()
     main(args)
