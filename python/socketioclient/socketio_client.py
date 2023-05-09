@@ -18,6 +18,7 @@ API_KEY = '<Your API_KEY>'
 PASSPHRASE = '<Your PASSPHRASE>'
 SECRET_KEY = '<Your SECRET_KEY>'
 
+
 def create_header(api_key, secret_key, passphrase):
     timestamp = str(time.time())
     message = timestamp + 'GET' + "/socket.io/"
@@ -36,8 +37,6 @@ def create_header(api_key, secret_key, passphrase):
 class FastRFSClient(socketio.ClientNamespace):
     def __init__(self, namespace):
         self.subscription_requests = []
-        self.previous_response_times = {}
-        self.running_avg_times = {}
         super().__init__(namespace)
 
     def populate_subscription_requests(self, token_pairs: list, levels: list):
@@ -58,8 +57,6 @@ class FastRFSClient(socketio.ClientNamespace):
         logger.info('Server connected.')
         for subscription_request in self.subscription_requests:
             self.emit('subscribe', subscription_request, namespace='/streaming')
-            client_request_id = subscription_request['client_request_id']
-            self.previous_response_times[client_request_id] = time.time()
         logger.info('Finished subscribing.')
 
     def on_disconnect(self, *args):
@@ -69,18 +66,10 @@ class FastRFSClient(socketio.ClientNamespace):
         logger.info("Cannot connect to the server. Error", args)
 
     def on_response(self, *args):
-        response_time = time.time()
-        client_request_id = args[0]['client_request_id']
         logger.info("Client received response: " + str(args))
-        previous_response_time = self.previous_response_times[client_request_id]
-        logger.info(f'Client_request_id: {client_request_id}, time taken for first response {response_time - previous_response_time}')
-        self.previous_response_times[client_request_id] = response_time
 
     def on_stream(self, *args):
-        response_time = time.time()
-        client_request_id = args[0][0]['client_request_id']
-        logger.info("printing arguments ", *args)
-        self.previous_response_times[client_request_id] = response_time
+        pass
 
     def on_error(self, *args):
         logger.info("error", args)
@@ -93,9 +82,6 @@ def main(args):
     socketio_client = socketio.Client(logger=False, engineio_logger=False, ssl_verify=False)
     socketio_client.register_namespace(client)
     socketio_client.connect(URL, namespaces=['/streaming'], transports=['websocket'], headers=headers)
-
-    while True:
-        continue
 
 
 if __name__ == '__main__':
