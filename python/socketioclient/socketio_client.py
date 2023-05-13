@@ -1,17 +1,17 @@
+# python-socketio==4.6.0
+# Python 3.9.16
+
 import argparse
 import base64
 import hashlib
 import hmac
-import ssl
 import time
 import uuid
+
 import logzero
 import socketio
 
 logger = logzero.logger
-
-ctx = ssl.create_default_context()
-ctx.set_ciphers('DEFAULT')
 
 URL = 'https://stream.falconx.io'
 API_KEY = '<Your API_KEY>'
@@ -34,7 +34,7 @@ def create_header(api_key, secret_key, passphrase):
     }
 
 
-class FastRFSClient(socketio.ClientNamespace):
+class SocketIoClient(socketio.ClientNamespace):
     def __init__(self, namespace):
         self.subscription_requests = []
         super().__init__(namespace)
@@ -76,7 +76,7 @@ class FastRFSClient(socketio.ClientNamespace):
 
 
 def main(args):
-    client = FastRFSClient(namespace='/streaming')
+    client = SocketIoClient(namespace='/streaming')
     client.populate_subscription_requests(args.token_pairs, args.levels)
     headers = create_header(API_KEY, SECRET_KEY, PASSPHRASE)
     socketio_client = socketio.Client(logger=False, engineio_logger=False, ssl_verify=False)
