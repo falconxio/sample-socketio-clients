@@ -1,5 +1,5 @@
-//go:build sample_client
-// +build sample_client
+//go:build ws_client
+// +build ws_client
 
 package main
 
