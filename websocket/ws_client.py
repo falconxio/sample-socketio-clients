@@ -87,7 +87,7 @@ class FalconXWSClient:
             self.authenticate()
 
         # websocket.enableTrace(True)
-        self.conn = websocket.WebSocketApp(self.host,
+        self.conn = websocket.WebSocketApp(self.host+self.path,
                                 on_open=on_open,
                                 on_message=on_message,
                                 on_error=on_error,
@@ -115,7 +115,7 @@ class FalconXWSClient:
             "quote_token": "USD",
             "quantity": {
                 "token": "ETH",
-                "levels": [0.1, 0.1]
+                "levels": [0.1, 1]
             },
             "request_id": "my_request_1",
             "action": "subscribe"
@@ -124,7 +124,7 @@ class FalconXWSClient:
 
 
 if __name__ == "__main__":
-    host = "stream.falconx.io/price.tickers"
+    host = "stream.falconx.io"
     path = "/price.tickers"
     api_key = 'xxx'
     passphrase = "xxx"

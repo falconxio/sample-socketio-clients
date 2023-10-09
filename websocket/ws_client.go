@@ -58,6 +58,13 @@ type SubscribeRequest struct {
 	Quantity   QuantityLevels `json:"quantity"`
 }
 
+type UnSubscribeRequest struct {
+	RequestId  string `json:"request_id"`
+	Action     string `json:"action"`
+	BaseToken  string `json:"base_token"`
+	QuoteToken string `json:"quote_token"`
+}
+
 // Utility Functions:
 func getSign(timeint int64, secretKey string, path string) string {
 	timestamp := strconv.FormatInt(timeint, 10)
@@ -134,9 +141,9 @@ func (fws *FalconxWSClient) Connect() {
 
 	var url string
 	if fws.SSL {
-		url = fmt.Sprintf("%s://%s", "wss", fws.Host)
+		url = fmt.Sprintf("%s://%s%s", "wss", fws.Host, fws.Path)
 	} else {
-		url = fmt.Sprintf("%s://%s", "ws", fws.Host)
+		url = fmt.Sprintf("%s://%s%s", "ws", fws.Host, fws.Path)
 	}
 
 	log.Println("Trying to connect to ", url)
@@ -197,6 +204,23 @@ func (fws *FalconxWSClient) Subscribe(baseToken string, quoteToken string, clien
 		},
 	}
 	log.Println("Sending request -> ", req)
+	err := fws.Conn.WriteJSON(req)
+	if err != nil {
+		log.Printf("error occurred while writing json %s", err)
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (fws *FalconxWSClient) UnSubscribe(baseToken string, quoteToken string, clientRequestId string) (bool, error) {
+	req := UnSubscribeRequest{
+		Action:     "unsubscribe",
+		RequestId:  clientRequestId,
+		BaseToken:  baseToken,
+		QuoteToken: quoteToken,
+	}
+	log.Println("Sending Unsubscribe request -> ", req)
 	err := fws.Conn.WriteJSON(req)
 	if err != nil {
 		log.Printf("error occurred while writing json %s", err)
@@ -268,11 +292,14 @@ func AuthenticateAndSubscribe(fxClient *FalconxWSClient) {
 	if !isAuthenticated {
 		log.Fatal("Unable to authenticate. Err: ", err)
 	} else {
-		log.Println("Trying to sub")
+		log.Println("Trying to subscribe")
 		success, err := fxClient.Subscribe("ETH", "USD", "fx_ws_06102023", []float64{0.1, 1}, "ETH")
 		if !success {
 			log.Fatal("Unable to Subscribe. Err: ", err)
 		}
+
+		// time.Sleep(5 * time.Second)
+		// fxClient.UnSubscribe("ETH", "USD", "fx_ws_06102023")
 	}
 }
 
