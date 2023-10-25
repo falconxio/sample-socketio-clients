@@ -14,5 +14,5 @@ OpenJDK 64-Bit Server VM (build 17.0.6+10-Ubuntu-0ubuntu120.04.1, mixed mode, sh
 * Edit your API keys/endpoints in App.java
 * You can directly run App.java from your IDE or
 * run `mvn clean compile assembly:single`
-* then run `java -jar target/java_socketio_client-1.0-jar-with-dependencies.jar`
+* then run `java -jar target/java_ws_client-1.0-jar-with-dependencies.jar`
 
