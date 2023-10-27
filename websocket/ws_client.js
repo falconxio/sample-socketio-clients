@@ -86,16 +86,32 @@ class FXClient {
           console.log("Authentication Failure")
         }
       }
-      case "subscription_response": {
+      case "subscribe_response": {
         if(jsonMessage.status == "success"){
           console.log("Subscription successful  -> ", jsonMessage)
         }else{
           console.log("Subscription Failed -> ", jsonMessage)
         }
       }
+      case "unsubscribe_response": {
+        if(jsonMessage.status == "success"){
+          console.log("UnSubscription successful  -> ", jsonMessage)
+        }else{
+          console.log("UnSubscription Failed -> ", jsonMessage)
+        }
+      }
+      case "data_response": {
+        if(jsonMessage.status == "success"){
+          console.log("Data Response  -> ", jsonMessage)
+        }else{
+          console.log("Data Request Failed -> ", jsonMessage)
+        }
+      }
       case "stream": {
         if(jsonMessage.status == "success"){
           console.log(JSON.stringify(jsonMessage,null,2))
+        }else{
+          console.log("Error in stream: ", JSON.stringify(jsonMessage,null,2))
         }
       }
     }
