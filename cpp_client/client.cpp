@@ -16,6 +16,8 @@
 #include <openssl/buffer.h>
 #include <chrono>
 
+#include <thread>
+
 //prod keys
 const std::string API_KEY = "*";
 const std::string PASSPHRASE = "*";
