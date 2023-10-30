@@ -22,6 +22,7 @@ const std::string PASSPHRASE = "*";
 const std::string SECRET_KEY = "*";
 const std::string URL = "https://stream.falconx.io";
 
+
 std::string base64_encode(const unsigned char* input, size_t len)
 {
     BIO *bmem = NULL, *b64 = NULL;
@@ -260,6 +261,19 @@ private:
     std::vector<sio::message::ptr> subscription_requests;
 };
 
+void make_new_connection(const std::vector<std::string> &token_pairs, const std::vector<int> &levels)  {
+    sio::client socket_io_client;
+
+    FastRFSClient client(&socket_io_client, "/streaming");
+    client.populate_subscription_requests(token_pairs, levels);
+    // Set up event handlers
+    socket_io_client.set_open_listener(std::bind(&FastRFSClient::OnConnected, client));
+    socket_io_client.set_reconnect_attempts(0); // set this to zero so it doesnt reconnect with old headers automatically
+    client.connect();
+    // the code flow comes here when connection is closed.
+}
+
+
 int main(int argc, char **argv)
 {
     std::vector<std::string> token_pairs = {"BTC/USD"};
@@ -288,13 +302,12 @@ int main(int argc, char **argv)
         }
     }
 
-    sio::client socket_io_client;
-
-    FastRFSClient client(&socket_io_client, "/streaming");
-    client.populate_subscription_requests(token_pairs, levels);
-    // Set up event handlers
-    socket_io_client.set_open_listener(std::bind(&FastRFSClient::OnConnected, client));
-    client.connect();
+    while(true){
+        make_new_connection(token_pairs, levels);
+        std::cout << "Waiting for 5 seconds before reconnecting "<<std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        std::cout << "ReConeccting: "<<std::endl;
+    }
 
     return 0;
 }
