@@ -102,7 +102,6 @@ class FalconXWSClient:
           "action":     "auth",
           "api_key":    self.api_key,
           "passphrase": self.passphrase,
-          "secret_key": self.secret,
           "sign":       signature,
           "timestamp":  timestamp,
           "request_id": "my_request"
