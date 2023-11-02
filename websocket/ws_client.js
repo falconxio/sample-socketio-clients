@@ -1,5 +1,5 @@
 const WebSocket = require('ws');
-const CryptoJS = require('crypto-js'); // crypto-js@4.1.1 
+const CryptoJS = require('crypto-js'); // crypto-js@4.1.1
 
 
 class FXClient {
@@ -22,7 +22,7 @@ class FXClient {
     const signatureB64 = signature.toString(CryptoJS.enc.Base64);
     return {
       'action': 'auth',
-      'request_id': "my_auth_request_1",
+      'request_id': "my_auth_request_0",
       'sign': signatureB64,
       'timestamp': timestamp,
       'api_key': this.apiKey,
@@ -30,20 +30,8 @@ class FXClient {
     }
   }
 
-  heartbeat(client) {
-    clearTimeout(client.pingTimeout);
-
-    // Use `WebSocket#terminate()`, which immediately destroys the connection,
-    // instead of `WebSocket#close()`, which waits for the close timer.
-    // Delay should be equal to the interval at which your server
-    // sends out pings plus a conservative assumption of the latency.
-    client.pingTimeout = setTimeout(() => {
-      client.terminate();
-    }, 30000 + 1000);
-  }
-
   onConnect() {
-    console.log(`Connected to websocket server`);
+    console.log(`${new Date()} Connected to websocket server`);
     this.authenticate()
   }
 
@@ -52,14 +40,12 @@ class FXClient {
     this.connection.send(JSON.stringify(authRequest))
   }
 
-  onDisconnect() {
-    console.log(`Disconnected to ${this.namespace} namespace`);
-    console.log('Retrying connection..')
-    this.connect();
-  }
-
   onError(msg) {
     console.log(`Error. Message received:`, msg)
+  }
+
+  onClose(msg) {
+    console.log(`${new Date()}Lol. Close:`, msg)
   }
 
   connect() {
@@ -70,9 +56,13 @@ class FXClient {
     console.log(finalUrl)
     this.connection = new WebSocket(finalUrl);
     this.connection.on('open', this.onConnect.bind(this));
+    this.connection.on('close', this.onClose.bind(this));
+    this.connection.on('end', this.onClose.bind(this));
     this.connection.on('error', this.onError.bind(this));
-    this.connection.on('ping', this.heartbeat.bind(this));
     this.connection.on('message', this.onMessage.bind(this));
+    this.connection.onclose = function (ev) {
+      console.info(`${new Date()}Websocket closed.`);
+    };
   }
 
   onMessage(msg) {
@@ -81,10 +71,17 @@ class FXClient {
     switch(jsonMessage.event) {
       case "auth_response": {
         if(jsonMessage.status == "success"){
-          this.subscribe()
+          // Subscribe
+          // this.subscribe()
+
+          // Fetch data
+          this.fetchData("max_levels")
+          this.fetchData("allowed_markets")
+          this.fetchData("max_connections")
         }else{
           console.log("Authentication Failure")
         }
+        break
       }
       case "subscribe_response": {
         if(jsonMessage.status == "success"){
@@ -92,6 +89,7 @@ class FXClient {
         }else{
           console.log("Subscription Failed -> ", jsonMessage)
         }
+        break
       }
       case "unsubscribe_response": {
         if(jsonMessage.status == "success"){
@@ -99,13 +97,15 @@ class FXClient {
         }else{
           console.log("UnSubscription Failed -> ", jsonMessage)
         }
+        break
       }
       case "data_response": {
         if(jsonMessage.status == "success"){
-          console.log("Data Response  -> ", jsonMessage)
+          console.log("Data Response  -> ", JSON.stringify(jsonMessage,null,2))
         }else{
           console.log("Data Request Failed -> ", jsonMessage)
         }
+        break
       }
       case "stream": {
         if(jsonMessage.status == "success"){
@@ -113,6 +113,15 @@ class FXClient {
         }else{
           console.log("Error in stream: ", JSON.stringify(jsonMessage,null,2))
         }
+        break
+      }
+      case "error_response": {
+        if(jsonMessage.status == "success"){
+          console.log(JSON.stringify(jsonMessage,null,2))
+        }else{
+          console.log("Error in stream: ", JSON.stringify(jsonMessage,null,2))
+        }
+        break
       }
     }
   }
@@ -128,7 +137,28 @@ class FXClient {
       "request_id": "my_request_1",
       "action": "subscribe"
     }
-  
+
+    this.connection.send(JSON.stringify(subscription_request));
+  }
+
+  unsubscribe(){
+    const subscription_request = {
+      "base_token": "ETH",
+      "quote_token": "USD",
+      "request_id": "my_request_2",
+      "action": "unsubscribe"
+    }
+
+    this.connection.send(JSON.stringify(subscription_request));
+  }
+
+  fetchData(requestTyoe){
+    const subscription_request = {
+      "request_type": requestTyoe,
+      "request_id": "my_request_3",
+      "action": "data_request"
+    }
+
     this.connection.send(JSON.stringify(subscription_request));
   }
 
@@ -147,6 +177,6 @@ apiKey = "xxx"
 secretKey = "xxx"
 passphrase = "xxx"
 
-var fxStreamingClient = new FXClient(url, path, false, apiKey, passphrase, secretKey);
+var fxStreamingClient = new FXClient(url, path, true, apiKey, passphrase, secretKey);
 
 fxStreamingClient.connect();
