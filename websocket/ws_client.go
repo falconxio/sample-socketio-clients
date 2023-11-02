@@ -9,7 +9,6 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -26,13 +25,6 @@ type ResponseMessage struct {
 	Event     string      `json:"event"`
 	RequestId string      `json:"request_id"`
 	Body      interface{} `json:"body,omitempty"`
-}
-
-type StreamResponse struct {
-	Status    string                `json:"status" default:"error"`
-	Event     string                `json:"event"`
-	RequestId string                `json:"request_id"`
-	Body      []PriceUpdateResponse `json:"body,omitempty"`
 }
 
 type PriceUpdateResponse struct {
@@ -63,6 +55,12 @@ type UnSubscribeRequest struct {
 	Action     string `json:"action"`
 	BaseToken  string `json:"base_token"`
 	QuoteToken string `json:"quote_token"`
+}
+
+type DataRequest struct {
+	RequestId   string `json:"request_id"`
+	Action      string `json:"action"`
+	RequestType string `json:"request_type"`
 }
 
 // Utility Functions:
@@ -219,7 +217,24 @@ func (fws *FalconxWSClient) UnSubscribe(baseToken string, quoteToken string, cli
 		BaseToken:  baseToken,
 		QuoteToken: quoteToken,
 	}
-	log.Println("Sending Unsubscribe request -> ", req)
+	log.Println("Sending request -> ", req)
+	err := fws.Conn.WriteJSON(req)
+	if err != nil {
+		log.Printf("error occurred while writing json %s", err)
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (fws *FalconxWSClient) RequestData(requestType string, clientRequestId string) (bool, error) {
+
+	req := DataRequest{
+		Action:      "data_request",
+		RequestId:   clientRequestId,
+		RequestType: requestType,
+	}
+	log.Println("Sending request -> ", req)
 	err := fws.Conn.WriteJSON(req)
 	if err != nil {
 		log.Printf("error occurred while writing json %s", err)
@@ -232,6 +247,7 @@ func (fws *FalconxWSClient) UnSubscribe(baseToken string, quoteToken string, cli
 func (fws *FalconxWSClient) ReadMessages() {
 	fws.readerActive = true
 	defer func() { fws.readerActive = false }()
+	// count := 0
 	for {
 		_, msg, errRead := safeRead(fws.Conn)
 		if errRead != nil {
@@ -244,29 +260,48 @@ func (fws *FalconxWSClient) ReadMessages() {
 		var data ResponseMessage
 
 		err := json.Unmarshal(msg, &data)
-		if err == nil && data.Status == "error" {
-			log.Print("Error received")
-
-			// Prettifying the response
-			s, _ := json.MarshalIndent(data, "", "\t")
-			log.Println("Error Response: ", string(s))
-
-			if data.Event == "auth_response" {
-				fws.authenticated = false
+		switch data.Event {
+		case "auth_response":
+			{
+				if err == nil && data.Status == "error" {
+					log.Println("Authentication Failed. Err: ", data.Error, data.Body)
+					fws.authenticated = false
+				} else {
+					log.Println("Authentication Successful")
+					fws.authenticated = true
+				}
 				fws.authResponse <- fws.authenticated
 			}
-
-		} else {
-			if data.Body == "Authentication successful" {
-				fws.authenticated = true
-				fws.authResponse <- fws.authenticated
-			} else {
-				var data1 StreamResponse
-
-				err1 := json.Unmarshal(msg, &data1)
-				if err1 == nil && fws.LogStreams {
+		case "subscribe_response":
+			{
+				if err == nil && data.Status == "error" {
+					log.Println("Unable to subscribe. Err: ", data.Error, data.Body)
+				} else {
+					log.Println("Subscription Successful. Response: ", data.Body)
+				}
+			}
+		case "unsubscribe_response":
+			{
+				if err == nil && data.Status == "error" {
+					log.Println("Unable to unsubscribe. Err: ", data.Error, data.Body)
+				} else {
+					log.Println("UnSubscription Successful. Response: ", data.Body)
+				}
+			}
+		case "data_response":
+			{
+				if err == nil && data.Status == "error" {
+					log.Println("Unable to fetch requested data. Err: ", data.Error, data.Body)
+				} else {
+					log.Println("Data Response: ", data.Body)
+				}
+			}
+		case "stream":
+			{
+				streamData := data.Body.([]interface{})
+				if fws.LogStreams {
 					// Prettifying the response
-					s, _ := json.MarshalIndent(data1, "", "\t")
+					s, _ := json.MarshalIndent(streamData, "", "\t")
 					log.Println("Price Stream: ", string(s))
 				}
 			}
@@ -275,14 +310,10 @@ func (fws *FalconxWSClient) ReadMessages() {
 }
 
 func safeRead(conn *websocket.Conn) (messageType int, p []byte, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("Recovered from ", r)
-			messageType, p, err = -1, nil, errors.New("connection lost")
-		}
-	}()
 	messageType, r, err := conn.NextReader()
-	p, err = ioutil.ReadAll(r)
+	if err == nil {
+		p, err = ioutil.ReadAll(r)
+	}
 	return
 }
 
@@ -293,6 +324,25 @@ func AuthenticateAndSubscribe(fxClient *FalconxWSClient) {
 	} else {
 		log.Println("Trying to subscribe")
 		success, err := fxClient.Subscribe("ETH", "USD", "fx_ws_06102023", []float64{0.1, 1}, "ETH")
+		if !success {
+			log.Fatal("Unable to Subscribe. Err: ", err)
+		}
+
+		// time.Sleep(5 * time.Second)
+		// fxClient.UnSubscribe("ETH", "USD", "fx_ws_06102023")
+	}
+}
+
+func AuthenticateAndRequestData(fxClient *FalconxWSClient) {
+	isAuthenticated, err := fxClient.Authenticate()
+	if !isAuthenticated {
+		log.Fatal("Unable to authenticate. Err: ", err)
+		fxClient.Conn.Close()
+	} else {
+		log.Println("Trying to subscribe")
+		success, err := fxClient.RequestData("max_levels", "fx_ws_14102023")
+		success, err = fxClient.RequestData("allowed_markets", "fx_ws_15102023")
+		success, err = fxClient.RequestData("max_connections", "fx_ws_16102023")
 		if !success {
 			log.Fatal("Unable to Subscribe. Err: ", err)
 		}
@@ -320,6 +370,8 @@ func main() {
 	fxClient.Connect()
 
 	AuthenticateAndSubscribe(fxClient)
+	// AuthenticateAndRequestData(fxClient)
 
 	<-waitChan
 }
+
