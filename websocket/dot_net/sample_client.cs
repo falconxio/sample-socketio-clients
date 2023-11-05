@@ -75,12 +75,13 @@ namespace FXWSClient.Sample
       return Convert.ToBase64String(hash);
     }
 
-    public void Connect()
+    public async void Connect()
     {
       this.conn = new ClientWebSocket();
       Console.WriteLine("Trying to connect to URL -> " + this.Host + this.Path);
-      this.conn.ConnectAsync(new Uri(this.Host + this.Path), CancellationToken.None);
+      await this.conn.ConnectAsync(new Uri(this.Host + this.Path), CancellationToken.None);
       Console.WriteLine("Connected to websocket");
+      this.StartReading();
     }
 
     public async void Authenticate()
@@ -99,7 +100,6 @@ namespace FXWSClient.Sample
       var encoded = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dict));
       var buffer = new ArraySegment<Byte>(encoded, 0, encoded.Length);
       await this.conn.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-      this.StartReading();
     }
 
     public async void Subscribe()
@@ -160,7 +160,7 @@ namespace FXWSClient.Sample
     public async void StartReading()
     {
       byte[] buf = new byte[1056];
-      while (this.conn?.State == WebSocketState.Open)
+      while (this.conn?.State == WebSocketState.Open || this.conn?.State == WebSocketState.CloseSent)
       {
         var result = await this.conn.ReceiveAsync(buf, CancellationToken.None);
         if (result.MessageType == WebSocketMessageType.Close)
@@ -237,7 +237,7 @@ namespace FXWSClient.Sample
 
       var exitEvent = new ManualResetEvent(false);
 
-      var fx_client = new FalconXWSClient(host, path, apiKey, secretKey, passPhrase, false);
+      var fx_client = new FalconXWSClient(host, path, apiKey, secretKey, passPhrase, true);
 
       fx_client.Connect();
 
