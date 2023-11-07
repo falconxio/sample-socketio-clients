@@ -305,6 +305,10 @@ func (fws *FalconxWSClient) ReadMessages() {
 					log.Println("Price Stream: ", string(s))
 				}
 			}
+		case "error_response":
+			{
+				log.Println("Error Response Received: ", data.Body)
+			}
 		}
 	}
 }
@@ -364,7 +368,7 @@ func main() {
 
 	fxClient := NewFalconxWSClient(host, path)
 	fxClient.SetAuth(apiKey, secret, passphrase)
-	// fxClient.EnableSSL()
+	fxClient.EnableSSL()
 	fxClient.EnableRetry(1, nil)
 
 	fxClient.Connect()
@@ -374,4 +378,3 @@ func main() {
 
 	<-waitChan
 }
-
