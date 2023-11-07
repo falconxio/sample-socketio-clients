@@ -90,7 +90,7 @@ namespace FXWSClient.Sample
       Dictionary<string, object> dict = new Dictionary<string, object>();
 
       var timestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
-      dict.Add("sign", GetSignature(this.SecretKey, timestamp.ToString(), "GET", this.Path));
+      dict.Add("signature", GetSignature(this.SecretKey, timestamp.ToString(), "GET", this.Path));
       dict.Add("api_key", this.ApiKey);
       dict.Add("passphrase", this.PassPhrase);
       dict.Add("action", "auth");

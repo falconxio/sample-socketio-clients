@@ -73,7 +73,7 @@ class FalconXWSClient:
             data = json.loads(message)
             if data["event"] == "auth_response":
                 if data["status"] == "success":
-                    print("Authentication successful.")  # noqa
+                    print("Authentication successful.", data)  # noqa
                     self.authenticated = True
                     self.fetch_data("max_levels")
                     self.fetch_data("allowed_markets")
@@ -129,7 +129,7 @@ class FalconXWSClient:
             "action": "auth",
             "api_key": self.api_key,
             "passphrase": self.passphrase,
-            "sign": signature,
+            "signature": signature,
             "timestamp": timestamp,
             "request_id": "my_request"
         }

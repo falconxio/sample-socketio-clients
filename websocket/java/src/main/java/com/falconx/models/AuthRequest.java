@@ -10,7 +10,7 @@ public class AuthRequest {
 
     public String passphrase;
 
-    public String sign;
+    public String signature;
 
     public Long timestamp;
 
@@ -22,7 +22,7 @@ public class AuthRequest {
       this.action = action;
       this.apiKey = apiKey;
       this.passphrase = passphrase;
-      this.sign = sign;
+      this.signature = sign;
       this.timestamp = timestamp;
       this.requestId = requestId;
     }

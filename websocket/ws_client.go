@@ -175,7 +175,7 @@ func (fws *FalconxWSClient) Authenticate() (bool, error) {
 		"action":     "auth",
 		"api_key":    fws.apiKey,
 		"passphrase": fws.passphrase,
-		"sign":       signature,
+		"signature":       signature,
 		"timestamp":  timestamp,
 		"request_id": "my_request",
 	}
@@ -267,7 +267,7 @@ func (fws *FalconxWSClient) ReadMessages() {
 					log.Println("Authentication Failed. Err: ", data.Error, data.Body)
 					fws.authenticated = false
 				} else {
-					log.Println("Authentication Successful")
+					log.Println("Authentication Successful", data.Body)
 					fws.authenticated = true
 				}
 				fws.authResponse <- fws.authenticated

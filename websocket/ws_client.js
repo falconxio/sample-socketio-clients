@@ -23,7 +23,7 @@ class FXClient {
     return {
       'action': 'auth',
       'request_id': "my_auth_request_0",
-      'sign': signatureB64,
+      'signature': signatureB64,
       'timestamp': timestamp,
       'api_key': this.apiKey,
       'passphrase': this.passphrase,
@@ -71,13 +71,14 @@ class FXClient {
     switch(jsonMessage.event) {
       case "auth_response": {
         if(jsonMessage.status == "success"){
+          console.log("Authentication Successful", jsonMessage)
           // Subscribe
-          // this.subscribe()
+          this.subscribe()
 
           // Fetch data
-          this.fetchData("max_levels")
-          this.fetchData("allowed_markets")
-          this.fetchData("max_connections")
+          // this.fetchData("max_levels")
+          // this.fetchData("allowed_markets")
+          // this.fetchData("max_connections")
         }else{
           console.log("Authentication Failure")
         }
