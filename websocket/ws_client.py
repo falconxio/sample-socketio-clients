@@ -148,14 +148,14 @@ class FalconXWSClient:
         }
         self.conn.send(data=json.dumps(susbcription_request))
 
-    def unsusbcribe(self, base_token, quote_token):
-        unsusbcription_request = {
+    def unsubscribe(self, base_token, quote_token):
+        unsubscription_request = {
             "base_token": base_token,
             "quote_token": quote_token,
             "request_id": "my_request_1",
             "action": "unsubscribe"
         }
-        self.conn.send(data=json.dumps(unsusbcription_request))
+        self.conn.send(data=json.dumps(unsubscription_request))
 
     def fetch_data(self, type_of_data):
         data_request = {
