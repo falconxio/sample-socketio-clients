@@ -77,7 +77,7 @@ class FalconXWSClient:
                     self.authenticated = True
 
                     # Subscribe
-                    self.susbcribe()
+                    self.subscribe()
 
                     # Fetch data
                     # self.fetch_data("max_levels")
@@ -140,8 +140,8 @@ class FalconXWSClient:
         }
         self.conn.send(data=json.dumps(req))
 
-    def susbcribe(self):
-        susbcription_request = {
+    def subscribe(self):
+        subscription_request = {
             "base_token": "ETH",
             "quote_token": "USD",
             "quantity": {
@@ -151,7 +151,7 @@ class FalconXWSClient:
             "request_id": "my_request_1",
             "action": "subscribe"
         }
-        self.conn.send(data=json.dumps(susbcription_request))
+        self.conn.send(data=json.dumps(subscription_request))
 
     def unsubscribe(self, base_token, quote_token):
         unsubscription_request = {
