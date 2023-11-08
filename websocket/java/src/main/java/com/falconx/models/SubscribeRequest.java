@@ -18,9 +18,9 @@ public class SubscribeRequest {
     @JsonProperty("request_id")
     public String requestId;
 
-    public SubscribeRequest(String action, String baseToken, String quoteToken, String quantityToken,
+    public SubscribeRequest(String baseToken, String quoteToken, String quantityToken,
         List<Double> levels, String requestId) {
-      this.action = action;
+      this.action = "subscribe";
       this.baseToken = baseToken;
       this.quoteToken = quoteToken;
       this.quantity = new Quantity(quantityToken, levels);

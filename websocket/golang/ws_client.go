@@ -175,7 +175,7 @@ func (fws *FalconxWSClient) Authenticate() (bool, error) {
 		"action":     "auth",
 		"api_key":    fws.apiKey,
 		"passphrase": fws.passphrase,
-		"signature":       signature,
+		"signature":  signature,
 		"timestamp":  timestamp,
 		"request_id": "my_request",
 	}

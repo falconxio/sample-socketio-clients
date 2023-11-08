@@ -31,6 +31,13 @@ namespace FXWSClient.Sample
     public string? request_id { get; set; }
   }
 
+  public class DataRequest
+  {
+    public string action { get; set; } = "data_request";
+    public string? request_type { get; set; }
+    public string? request_id { get; set; }
+  }
+
   public class FxWSResponse
   {
 
@@ -157,6 +164,29 @@ namespace FXWSClient.Sample
       }
     }
 
+    public async void FetchData(string RequestType)
+    {
+      if (this.conn?.State == WebSocketState.Open)
+      {
+
+        DataRequest unSubscriberequest = new DataRequest
+        {
+          action = "data_request",
+          request_type = RequestType,
+          request_id = "my_sample_request_1"
+        };
+
+        Console.WriteLine(JsonConvert.SerializeObject(unSubscriberequest));
+        var encoded = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(unSubscriberequest));
+        var buffer = new ArraySegment<Byte>(encoded, 0, encoded.Length);
+        await this.conn.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+      }
+      else
+      {
+        Console.WriteLine("Not connected.");
+      }
+    }
+
     public async void StartReading()
     {
       byte[] buf = new byte[1056];
@@ -183,6 +213,10 @@ namespace FXWSClient.Sample
                   {
                     Console.WriteLine("Authentication Successfull", ex);
                   }
+                  else
+                  {
+                    Console.WriteLine("Authentication Failed", ex);
+                  }
                   break;
                 }
               case "subscribe_response":
@@ -190,6 +224,10 @@ namespace FXWSClient.Sample
                   if (ex?.status == "success")
                   {
                     Console.WriteLine("Subscription Successfull", ex);
+                  }
+                  else
+                  {
+                    Console.WriteLine("Subscription Failed", ex);
                   }
                   break;
                 }
@@ -199,6 +237,33 @@ namespace FXWSClient.Sample
                   {
                     Console.WriteLine("UnSubscription Successfull", ex);
                   }
+                  else
+                  {
+                    Console.WriteLine("UnSubscription Failed", ex);
+                  }
+                  break;
+                }
+              case "data_response":
+                {
+                  if (ex?.status == "success")
+                  {
+                    Console.WriteLine("Data Response");
+                    var prettyJson = JsonConvert.SerializeObject(
+                      ex.body, Formatting.Indented,
+                      new JsonConverter[] { new StringEnumConverter() }
+                    );
+
+                    Console.WriteLine(prettyJson);
+                  }
+                  else
+                  {
+                    Console.WriteLine("Data Request Failed", ex);
+                  }
+                  break;
+                }
+              case "error_response":
+                {
+                  Console.WriteLine("Error Received", ex);
                   break;
                 }
               case "stream":
@@ -245,6 +310,8 @@ namespace FXWSClient.Sample
 
       fx_client.Subscribe();
 
+      // fx_client.FetchData("max_levels");
+      // fx_client.FetchData("max_connections");
       exitEvent.WaitOne();
     }
   }

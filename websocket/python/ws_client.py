@@ -75,9 +75,14 @@ class FalconXWSClient:
                 if data["status"] == "success":
                     print("Authentication successful.", data)  # noqa
                     self.authenticated = True
-                    self.fetch_data("max_levels")
-                    self.fetch_data("allowed_markets")
-                    self.fetch_data("max_connections")
+
+                    # Subscribe
+                    self.subscribe()
+
+                    # Fetch data
+                    # self.fetch_data("max_levels")
+                    # self.fetch_data("allowed_markets")
+                    # self.fetch_data("max_connections")
                 else:
                     print("Authentication Unsuccessful. Rsponse: ", data)  # noqa
             if data["event"] == "subscribe_response":
@@ -135,8 +140,8 @@ class FalconXWSClient:
         }
         self.conn.send(data=json.dumps(req))
 
-    def susbcribe(self):
-        susbcription_request = {
+    def subscribe(self):
+        subscription_request = {
             "base_token": "ETH",
             "quote_token": "USD",
             "quantity": {
@@ -146,7 +151,7 @@ class FalconXWSClient:
             "request_id": "my_request_1",
             "action": "subscribe"
         }
-        self.conn.send(data=json.dumps(susbcription_request))
+        self.conn.send(data=json.dumps(subscription_request))
 
     def unsubscribe(self, base_token, quote_token):
         unsubscription_request = {

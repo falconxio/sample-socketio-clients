@@ -14,8 +14,8 @@ public class UnSubscribeRequest {
     @JsonProperty("request_id")
     public String requestId;
 
-    public UnSubscribeRequest(String action, String baseToken, String quoteToken, String requestId) {
-      this.action = action;
+    public UnSubscribeRequest(String baseToken, String quoteToken, String requestId) {
+      this.action = "unsubscribe";
       this.baseToken = baseToken;
       this.quoteToken = quoteToken;
       this.requestId = requestId;
