@@ -45,7 +45,7 @@ class FXClient {
   }
 
   onClose(msg) {
-    console.log(`${new Date()}Lol. Close:`, msg)
+    console.log(`${new Date()}. Close:`, msg)
   }
 
   connect() {
