@@ -17,9 +17,9 @@ public class AuthRequest {
     @JsonProperty("request_id")
     public String requestId;
 
-    public AuthRequest(String action, String apiKey, String passphrase, String sign, Long timestamp,
+    public AuthRequest(String apiKey, String passphrase, String sign, Long timestamp,
         String requestId) {
-      this.action = action;
+      this.action = "auth";
       this.apiKey = apiKey;
       this.passphrase = passphrase;
       this.signature = sign;

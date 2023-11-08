@@ -14,7 +14,5 @@ public class WebsocketClientConfigurator extends ClientEndpointConfig.Configurat
 
     @Override
     public void afterResponse(HandshakeResponse hr) {
-        Map<String, List<String>> headers = hr.getHeaders();
-        System.out.println("headers -> "+headers);
     }
 }

@@ -23,10 +23,10 @@ import java.util.Date;
 import javax.crypto.Mac;
 
 import com.falconx.models.AuthRequest;
+import com.falconx.models.DataRequest;
 import com.falconx.models.Response;
 import com.falconx.models.SubscribeRequest;
 import com.falconx.models.UnSubscribeRequest;
-import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -63,7 +63,6 @@ public class FalconxWSClient {
 
     try {
       AuthRequest authRequest = new AuthRequest(
-          "auth",
           this.apiKey,
           this.passphrase,
           this.generateSignature(),
@@ -71,7 +70,6 @@ public class FalconxWSClient {
           "my_request_id_1");
 
       ObjectMapper mapper = new ObjectMapper();
-      System.out.println(mapper.writeValueAsString(authRequest));
       session.getBasicRemote().sendText(mapper.writeValueAsString(authRequest));
     } catch (Exception ex) {
       System.out.println(ex);
@@ -83,7 +81,18 @@ public class FalconxWSClient {
     levels.add(0.5);
     levels.add(1.0);
     levels.add(5.0);
-    SubscribeRequest request = new SubscribeRequest("subscribe", "ETH", "USD", "ETH", levels, "my_subscribe_request");
+    SubscribeRequest request = new SubscribeRequest("ETH", "USD", "ETH", levels, "my_subscribe_request");
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.writeValueAsString(request);
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+    return "";
+  }
+
+  public String FetchData(Session session, String requestType) {
+    DataRequest request = new DataRequest(requestType, "my_subscribe_request");
     ObjectMapper mapper = new ObjectMapper();
     try {
       return mapper.writeValueAsString(request);
@@ -94,7 +103,7 @@ public class FalconxWSClient {
   }
 
   public String UnSubscribe(Session session) {
-    UnSubscribeRequest request = new UnSubscribeRequest("unsubscribe", "ETH", "USD", "my_unsubscribe_request");
+    UnSubscribeRequest request = new UnSubscribeRequest("ETH", "USD", "my_unsubscribe_request");
     ObjectMapper mapper = new ObjectMapper();
     try {
       return mapper.writeValueAsString(request);
@@ -114,15 +123,19 @@ public class FalconxWSClient {
   @OnMessage
   public String onMessage(String message, Session session) {
     try {
-      System.out.println("--- Received " + message);
-
       ObjectMapper mapper = new ObjectMapper();
       Response response = mapper.readValue(message, Response.class);
-      System.out.println("Data " + response.GetEvent());
       switch (response.GetEvent()) {
         case "auth_response": {
           if (response.GetStatus().compareToIgnoreCase("success") == 0) {
+            System.out.println("Auth Successful: " + message);
+
             return this.Subscribe(session);
+
+            // Fetch data
+            // return this.FetchData(session, "max_levels");
+            // return this.FetchData(session, "max_connections");
+            // return this.FetchData(session, "allowed_markets");
           } else {
             System.out.println("Authentication Failed: " + message);
           }
@@ -130,19 +143,31 @@ public class FalconxWSClient {
         }
         case "subscribe_response": {
           if (response.GetStatus().compareToIgnoreCase("success") == 0) {
-            System.out.println(message);
+            System.out.println("Subscribe Successful: " + message);
           } else {
-            System.out.println("Authentication Failed: " + message);
+            System.out.println("Subscription Failed: " + message);
           }
 
           break;
         }
         case "unsubscribe_response": {
           if (response.GetStatus().compareToIgnoreCase("success") == 0) {
-            System.out.println(message);
+            System.out.println("Unsubscribe Successful: " + message);
           } else {
-            System.out.println("Authentication Failed: " + message);
+            System.out.println("Unsubscribe Failed: " + message);
           }
+          break;
+        }
+        case "data_response": {
+          if (response.GetStatus().compareToIgnoreCase("success") == 0) {
+            System.out.println("Data Response: " + message);
+          } else {
+            System.out.println("Data Request Failed: " + message);
+          }
+          break;
+        }
+        case "error_response": {
+          System.out.println("Error Received: " + message);
           break;
         }
         case "stream": {

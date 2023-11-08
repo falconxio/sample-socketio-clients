@@ -75,9 +75,14 @@ class FalconXWSClient:
                 if data["status"] == "success":
                     print("Authentication successful.", data)  # noqa
                     self.authenticated = True
-                    self.fetch_data("max_levels")
-                    self.fetch_data("allowed_markets")
-                    self.fetch_data("max_connections")
+
+                    # Subscribe
+                    self.susbcribe()
+
+                    # Fetch data
+                    # self.fetch_data("max_levels")
+                    # self.fetch_data("allowed_markets")
+                    # self.fetch_data("max_connections")
                 else:
                     print("Authentication Unsuccessful. Rsponse: ", data)  # noqa
             if data["event"] == "subscribe_response":
