@@ -79,7 +79,7 @@ def main(args):
     client = SocketIoClient(namespace='/streaming')
     client.populate_subscription_requests(args.token_pairs, args.levels)
     headers = create_header(API_KEY, SECRET_KEY, PASSPHRASE)
-    socketio_client = socketio.Client(logger=False, engineio_logger=False, ssl_verify=False)
+    socketio_client = socketio.Client(logger=False, engineio_logger=False, ssl_verify=True)
     socketio_client.register_namespace(client)
     socketio_client.connect(URL, namespaces=['/streaming'], transports=['websocket'], headers=headers)
 
